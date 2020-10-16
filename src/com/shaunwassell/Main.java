@@ -3,28 +3,45 @@ package com.shaunwassell;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Main {
     static void loadAutoMpgExample() {
-        List<String> lines = new ArrayList<>();
-        try(BufferedReader br = new BufferedReader(new FileReader("auto-mpg.data"))) {
-            String line;
-            while((line = br.readLine()) != null) {
-                lines.add(line);
-            }
-        } catch (Exception e) {
-            System.out.println("Exception: " + e.getMessage());
-        }
+        List<String> lines = TextLoader.getLines("auto-mpg.data");
         List<CarRecord> cars = lines.stream()
                 .map(line -> CarRecord.parseCarRecord(line))
                 .collect(Collectors.toList());
         cars.stream().forEach(car -> System.out.println(car));
     }
 
+    static void knnExample() {
+        List<String> lines = TextLoader.getLines("auto-mpg.data");
+        List<CarRecord> cars = lines.stream()
+                .map(line -> CarRecord.parseCarRecord(line))
+                .collect(Collectors.toList());
+        Collections.shuffle(cars);
+
+        List<CarRecord> testCars = cars.subList(0, 10);
+        List<CarRecord> restOfCars = cars.subList(10, cars.size());
+
+        KNNClassifier classifier = new KNNClassifier();
+
+        restOfCars.stream().forEach(car -> classifier.addDataPoint(
+                new DataPoint(car.displacement, car.weight, car.mpg > 25 ? "High" : "Low")
+        ));
+
+        List<Map<String, Integer>> results = testCars.stream()
+            .map(testCar -> classifier.classifyPoint(testCar.displacement, testCar.weight, 5))
+            .collect(Collectors.toList());
+
+        System.out.println(results);
+    }
+
     public static void main(String[] args) {
-        loadAutoMpgExample();
+        knnExample();
         // univariate array representation (columns)
         Integer[] ids = { 123, 234, 345, 456, 567 };
         String[] names = { "John Doe", "Jane Plain", "Joan Jones", "Jack Sparrow", "Sonic the Hedgehog" };
